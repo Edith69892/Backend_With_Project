@@ -1,0 +1,13 @@
+{
+  "name": "backend_with_project",
+  "version": "1.0.0",
+  "description": "Backend with  project from chai aur code",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
