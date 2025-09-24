@@ -1,10 +1,10 @@
 import mongoose, {Schema} from "mongoose";  
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
-import { use } from "react";
+// import { use } from "react";
 
 const userSchema = new Schema({
-    username:{
+    userName:{
         type:String,
         required : true,
         lowercase : true,
@@ -21,7 +21,7 @@ const userSchema = new Schema({
         trim: true,
     },
 
-    fullname:{
+    fullName:{
         type:String,
         required : true,
         trim: true,
@@ -58,7 +58,7 @@ const userSchema = new Schema({
 
 userSchema.pre('save', async function (next) {
     if(!this.isModified('password')) return next(); // this checks if the password is modified or not. If it is not modified then we don't hash it again. 
-    this.password = bcrypt.hash(this.password,10)
+    this.password =await bcrypt.hash(this.password,10)
     next()
 })
 // i am using function keyword because i want to use this keyword and also use async await because hashing takes time.
@@ -74,8 +74,8 @@ userSchema.methods.genrateAccessToken = function(){
         {
             _id : this._id,
             email : this.email,
-            username : this.username,
-            fullname : this.fullname,
+            userName : this.userName,
+            fullName : this.fullName,
             
         },
         process.env.ACCESS_TOKEN_SECRET,

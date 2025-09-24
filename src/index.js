@@ -1,5 +1,7 @@
 //first aproach
 // require('dotenv').config({path: './.env'})
+// Add to the top of index.js
+
 
 import dotenv from 'dotenv'
 
@@ -12,7 +14,8 @@ dotenv.config({
 })
 connectDB()
 .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
+
+    app.listen(process.env.PORT || 5000, '0.0.0.0',() => {
         console.log(`server is running sst port ${process.env.PORT}`);
         
     } )
@@ -22,6 +25,13 @@ connectDB()
     
 })
 
+// app.get('/', (req, res) => {
+//     res.send('API is running....');
+// })
+
+app.listen(5000, () => {
+    console.log('Server is running on port 5000');  
+})
 
 //second aproach
 // import mongoose from 'mongoose';
