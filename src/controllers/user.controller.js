@@ -19,7 +19,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
     const {userName , fullName , email , password}  = req.body;
 
-    console.log("Email:",email);
+    // console.log("Email:",email);
 
      // Basic required checks
     if (!fullName || fullName.trim() === "") {
@@ -73,32 +73,46 @@ const registerUser = asyncHandler(async (req, res, next) => {
         throw new ApiError(409, "User already exists with this email or username");
     }
 
-    console.log("req.body:", req.body);
-console.log("req.files:", req.files);
-
+    
     // check for files
-
+    
     const avatarLocalPath =  req.files?.avatar?.[0]?.path; 
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    
+    let coverImageLocalPath ;
+    
+    if(req.files && Array.isArray( req.files.coverImage) && req.files.coverImage.length > 0){
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
+    
+
 
     if(!avatarLocalPath){
         throw new ApiError(400, "avatar file is required");
     }
-
+    
     // upload files to cloudinary
     const avatar = await uploadOnCludinary(avatarLocalPath)
-    // const coverImage =  await uploadOnCludinary(coverImageLocalPath) ;
-
+    
+    let coverImage = null;
+    if(coverImageLocalPath){
+        
+        coverImage =  await uploadOnCludinary(coverImageLocalPath) ;
+    }
+    
     if(!avatar){
         throw new ApiError(400, "Avatar file is required, erro in cludinary");
     }
-
+    
+    
     // create user object and save to db
-
+    
+    console.log("req.body:", req.body);
+console.log("req.files:", req.files);
     const user = await User.create({
         fullName,
         avatar : avatar.url,
-        // coverImage : coverImage?.url || "",
+        coverImage : coverImage?.url || "",
         email,
         userName ,
         password
@@ -111,7 +125,7 @@ console.log("req.files:", req.files);
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createduser,"User registered successfully")
+        new ApiResponse(200, "User registered successfully",createduser)
     )
 })
 
