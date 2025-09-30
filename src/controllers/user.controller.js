@@ -164,8 +164,8 @@ const loginUser = asyncHandler(async (req, res) => {
   });
   const ispassword = await user.ispasswordValid(password);
 
-  if (!password) {
-    throw new ApiError(400, "Password is required");
+  if (!ispassword) {
+    throw new ApiError(400, "Password is incorrect");
   }
 
   const { accessToken, refreshToken } = await genrateAccessTokenAndREfreshToken(
