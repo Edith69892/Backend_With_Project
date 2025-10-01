@@ -248,8 +248,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       secure : true
     }
   
-    return 
-    res
+    return res
     .status(200)
     .cookie("accessToken", accessToken , options)
     .cookie("refreshToken", newRefreshToken, options)
