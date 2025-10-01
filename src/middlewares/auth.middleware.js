@@ -1,12 +1,13 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
+
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 
 // Verify User Middleware
 
-try {
-  const verifyUser = asyncHandler(async (req, _, next) => {
+export const verifyUser = asyncHandler(async (req, _, next) => {
+  try {
     // verify the user is authenticated or not
 
     const token =
@@ -34,9 +35,9 @@ try {
     // attach user to req object
     req.user = user;
     next();
-  });
-} catch (error) {
-  throw new ApiError(401, "Invalid Accesstoken");
-}
+  } catch (error) {
+    throw new ApiError(401, "Invalid Accesstoken");
+  }
+});
 
-export { verifyUser };
+
