@@ -5,7 +5,7 @@ import { uploadOnCludinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const genrateAccessTokenAndREfreshToken = async (userId) => {
-  const user = User.findById(userId);
+  const user = await User.findById(userId);
   const accessToken = user.genrateAccessToken();
   const refreshToken = user.genrateRefreshToken();
 
