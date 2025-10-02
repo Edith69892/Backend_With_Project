@@ -401,8 +401,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
       $set: {
         coverImage:{ 
           url :coverImage.url,
-        public_id : coverImage.public_id
-      }
+        public_id: coverImage.public_id}
       },
     },
     {

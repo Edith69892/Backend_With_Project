@@ -31,7 +31,7 @@ router.route("/refresh-token").post(refreshAccessToken);
 router.route("/Change-Password").post(verifyUser , ChangeCurrentPassword);
 router.route("/get-User").post(verifyUser , GetCurrentUser);
 router.route("/updateAvatar").post(verifyUser , upload.single("avatar"), updateUserAvatar);
-router.route("/updateCoverImg").post(verifyUser , upload.single("coverImg"), updateCoverImage);
+router.route("/updateCoverImg").post(verifyUser , upload.single("coverImage"), updateCoverImage);
 
 
 export default router;
