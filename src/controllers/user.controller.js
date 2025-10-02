@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCludinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from "cloudinary";
 
 const genrateAccessTokenAndREfreshToken = async (userId) => {
   const user = await User.findById(userId);
@@ -123,7 +124,10 @@ const registerUser = asyncHandler(async (req, res, next) => {
   console.log("req.files:", req.files);
   const user = await User.create({
     fullName,
-    avatar: avatar.url,
+    avatar: {
+      url: avatar.url,
+      public_id : avatar.public_id
+    },
     coverImage: coverImage?.url || "",
     email,
     userName,
@@ -329,8 +333,11 @@ const UpdateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-  
-  const avatarLocalPath = req.file?.avatar?.[0]?.path;
+
+  let user = await User.findById(req.user?._id)
+  const oldAvatarId = user.avatar?.public_id
+
+  const avatarLocalPath = req.file?.path;
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "avatar file is required");
@@ -342,17 +349,30 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "avatar url is missing");
 }
 
-  const user = await User.findByIdAndUpdate(
+
+
+   user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        avatar: avatar.url,
+        avatar:{
+          url : avatar.url,
+        public_id : avatar.public_id
+      }
       },
     },
     {
       new: true,
     }
   ).select("-password");
+
+
+  // delete old avatar
+
+  if(oldAvatarId){
+    await cloudinary.uploader.destroy(oldAvatarId);
+    
+  }
 
    return res
     .status(200)
@@ -361,7 +381,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const updateCoverImage = asyncHandler(async (req, res) => {
   
-  const CoverImageLocalPath = req.file?.coverImage?.[0]?.path;
+  let user = await User.findById(req.user?._id)
+  const oldCoverImgId = user.coverImage?.public_id
+  const CoverImageLocalPath = req.file?.path;
 
   if (!CoverImageLocalPath) {
     throw new ApiError(400, "Cover Image file is required");
@@ -373,17 +395,25 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "cover Img url is missing");
 }
 
-  const user = await User.findByIdAndUpdate(
+   user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        coverImage: coverImage.url,
+        coverImage:{ 
+          url :coverImage.url,
+        public_id : coverImage.public_id
+      }
       },
     },
     {
       new: true,
     }
   ).select("-password");
+
+  if(oldCoverImgId){
+    await cloudinary.uploader.destroy(oldCoverImgId);
+    
+  }
 
    return res
     .status(200)
