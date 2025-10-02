@@ -364,20 +364,20 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   const CoverImageLocalPath = req.file?.coverImage?.[0]?.path;
 
   if (!CoverImageLocalPath) {
-    throw new ApiError(400, "avatar file is required");
+    throw new ApiError(400, "Cover Image file is required");
   }
 
   const coverImage = await uploadOnCludinary(CoverImageLocalPath);
 
   if(!coverImage.url){
-    throw new ApiError(400, "avatar url is missing");
+    throw new ApiError(400, "cover Img url is missing");
 }
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        avatar: coverImage.url,
+        coverImage: coverImage.url,
       },
     },
     {
