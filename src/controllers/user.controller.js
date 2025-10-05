@@ -426,64 +426,126 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
   const channel = await User.aggregate([
     {
-      $match : {
-        username: userName?.toLowercase()
-      }
+      $match: {
+        username: userName?.toLowercase(),
+      },
     },
     {
-      $lookup : {
-        from : "subscription",
-        localField : "_id",
+      $lookup: {
+        from: "subscription",
+        localField: "_id",
         foreignField: "channel",
-        as : "subscribers"
-      }
+        as: "subscribers",
+      },
     },
     {
-       $lookup : {
-        from : "subscription",
-        localField : "_id",
+      $lookup: {
+        from: "subscription",
+        localField: "_id",
         foreignField: "subscriber",
-        as : "subscribedTo"
-      }
+        as: "subscribedTo",
+      },
     },
     {
-      $addFields : {
-        subscribersCount : {
-          $size : "subscribers"
+      $addFields: {
+        subscribersCount: {
+          $size: "subscribers",
         },
-        channelsubscribedToCount : {
-          $size : "subscribedTo"
+        channelsubscribedToCount: {
+          $size: "subscribedTo",
         },
-        isSubscribed :{
-          $cond :{
-            if:{$in: [req.user?._id, "$subscribers.subscriber"]},
-            then : true,
-            else : false
-          }
-        }
-      }
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
     },
     {
       $project: {
-        fullName : 1,
-        userName : 1,
-        avatar :1,
-        email : 1,
-        coverImage : 1,
-        subscribersCount : 1,
-        channelsubscribedToCount :1 ,
-        isSubscribed :1
-      }
-    }
+        fullName: 1,
+        userName: 1,
+        avatar: 1,
+        email: 1,
+        coverImage: 1,
+        subscribersCount: 1,
+        channelsubscribedToCount: 1,
+        isSubscribed: 1,
+      },
+    },
   ]);
 
-  if(!channel?.length){
-    throw new ApiError(400, "channel does not exist.")
+  if (!channel?.length) {
+    throw new ApiError(400, "channel does not exist.");
   }
 
   return res
-  .status(200)
-  .json(new ApiResponse(200, "User Channel fetched successfully", channel[0]))
+    .status(200)
+    .json(
+      new ApiResponse(200, "User Channel fetched successfully", channel[0])
+    );
+});
+
+//WatchHistory
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjrctId(req.user._id),
+        //req.user._id comes from your authentication middleware, usually as a string.
+        // Mongoose usually converts _id automatically to ObjectId in simple queries like User.findById(req.user._id).
+        // But in aggregation pipelines, MongoDB expects _id to be an ObjectId. So you must manually convert it using:
+        // new mongoose.Types.ObjectId(req.user._id)
+      },
+    },
+    {
+      $lookup: {
+        from: "video",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "user",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    userName: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "watch History Fetched successfully",
+        user[0].watchHistory
+      )
+    );
 });
 
 export {
@@ -497,4 +559,5 @@ export {
   updateUserAvatar,
   updateCoverImage,
   getUserChannelProfile,
+  getWatchHistory,
 };
