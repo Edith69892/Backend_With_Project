@@ -37,6 +37,6 @@ router.route("/update-account").patch(verifyUser , UpdateAccountDetails);
 router.route("/avatar").patch(verifyUser , upload.single("avatar"), updateUserAvatar);
 router.route("/cover-Image").patch(verifyUser , upload.single("coverImage"), updateCoverImage);
 router.route("/c/:userName").get(verifyUser,  getUserChannelProfile)
-router.route("history").get(verifyUser,  getWatchHistory)
+router.route("/history").get(verifyUser,  getWatchHistory)
 
 export default router;
