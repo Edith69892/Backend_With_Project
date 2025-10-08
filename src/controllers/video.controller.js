@@ -79,48 +79,49 @@ import { uploadOnCludinary } from "../utils/cloudinary.js";
 // with conditon
 
 const getAllVideos = asyncHandler(async (req, res) => {
-     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-    let pipelines = [];
+  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  let pipelines = [];
 
-    if(query){
-        pipelines.push({
-            $match : {
-                $or : [
-                    {title: {$regex : query , $options : "i"}},
-                     {description: {$regex : query , $options : "i"}}
-                ]
-            }
-        })
-    }
-
-    if(userId){
-        if(!isValidObjectId(userId)){
-            throw new ApiError(400, "User not found.")
-        }else{
-            pipelines.push({
-                $match :{ owner : new mongoose.Types.ObjectId(userId)}
-            })
-        }
-    }
-
-    //get only published videos
+  if (query) {
     pipelines.push({
-        $match: {
-         isPublished: true,
-       }
-    })
+      $match: {
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+        ],
+      },
+    });
+  }
 
-     //sortBy can be views created time and duration
-     //sortType ; ascending(1) or descending(-1)
+  if (userId) {
+    if (!isValidObjectId(userId)) {
+      throw new ApiError(400, "User not found.");
+    } else {
+      pipelines.push({
+        $match: { owner: new mongoose.Types.ObjectId(userId) },
+      });
+    }
+  }
 
-     pipelines.push({
-        $sort : {
-            [sortBy || "createdAt"] : sortType === "asc" ? 1 :-1
-        }
-     })
+  //get only published videos
+  pipelines.push({
+    $match: {
+      isPublished: true,
+    },
+  });
 
-     pipelines.push({
-         $lookup: {
+  //sortBy can be views created time and duration
+  //sortType ; ascending(1) or descending(-1)
+
+  pipelines.push({
+    $sort: {
+      [sortBy || "createdAt"]: sortType === "asc" ? 1 : -1,
+    },
+  });
+
+  pipelines.push(
+    {
+      $lookup: {
         from: "user",
         localField: "owner",
         foreignField: "_id",
@@ -129,38 +130,65 @@ const getAllVideos = asyncHandler(async (req, res) => {
           {
             $project: {
               userName: 1,
-              avatar: 1
-            }
-          }
-        ]
-         }
-     }
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    }
     // {
     //     $skip : (page-1) * limit
     //  },
     // {
-    //     $limit : limit   
-    )
+    //     $limit : limit
+  );
 
-     const aggregateVideos = Video.aggregate(pipelines)
+  const aggregateVideos = Video.aggregate(pipelines);
 
-     const options = {
-        page: parseInt(page , 10),
-        limit: parseInt(limit, 10)
-     }
-     const video = await Video.aggregatePaginate(aggregateVideos, options)
+  const options = {
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+  };
+  const video = await Video.aggregatePaginate(aggregateVideos, options);
 
-     return res
-     .status(200)
-     .json(new ApiResponse(200, video, " videos fetched successfully"))
-
-})
-
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, " videos fetched successfully"));
+});
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
-  // TODO: get video, upload to cloudinary, create video
+
+  if (!title || !description) {
+    throw new ApiError(400, "Title and description are required.");
+  }
+
+  const videoPath = req.file?.path;
+  if (!videoPath) {
+    throw new ApiError(400, "Video upload unsuccessful — no file found.");
+  }
+
+  const uploadedVideo = await uploadOnCludinary(videoPath);
+  if (!uploadedVideo) {
+    throw new ApiError(400, "Error uploading video to Cloudinary.");
+  }
+
+  const video = await Video.create({
+    title,
+    description,
+    isPublished: true,
+    owner: req.user._id,
+    videoFile: {   // ✅ This must match your schema field name
+      url: uploadedVideo.url,
+      public_id: uploadedVideo.public_id,
+    },
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, video, "Video published successfully."));
 });
+
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
