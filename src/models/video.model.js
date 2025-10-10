@@ -38,6 +38,10 @@ const videoSchema = new Schema(
       type: String,
       default: 0,
     },
+    likesCount: {
+      type: Number,
+      default: 0,
+    },
     isPublished: {
       type: Boolean,
     },
@@ -48,5 +52,3 @@ const videoSchema = new Schema(
 videoSchema.plugin(mongooseAggregatePaginate);
 
 export const Video = mongoose.model("Video", videoSchema);
-
-
