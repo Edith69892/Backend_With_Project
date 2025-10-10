@@ -402,12 +402,16 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   await Playlist.updateMany(
     { videos: videoId },
-    { $pull: { videos : videoId } }
+    { $pull: { videos: videoId } }
   );
 
   // delte video and thumbnail file from cloudinary
-  await cloudinary.uploader.destroy(video.videoFile.public_id , { resource_type: "video" });
-  await cloudinary.uploader.destroy(video.thumbnail.public_id , { resource_type: "video" });
+  await cloudinary.uploader.destroy(video.videoFile.public_id, {
+    resource_type: "video",
+  });
+  await cloudinary.uploader.destroy(video.thumbnail.public_id, {
+    resource_type: "video",
+  });
 
   // delet related data like , comments
 
@@ -426,6 +430,45 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid Video id.");
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  if (video?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(
+      400,
+      "You have no access of update the video details because you are not owner."
+    );
+  }
+
+  const PublishdVideoStaus = await Video.findByIdAndUpdate(
+    video?._id,
+    {
+      $set: {
+        isPublished: !video?.isPublished,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        PublishdVideoStaus,
+        "video publish status toggled successfully"
+      )
+    );
 });
 
 export {
