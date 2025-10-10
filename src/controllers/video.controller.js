@@ -1,4 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose";
+  import { v2 as cloudinary } from "cloudinary";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -391,6 +392,11 @@ const deleteVideo = asyncHandler(async (req, res) => {
     );
   }
 
+  await cloudinary.uploader.destroy(video.videoFile.public_id, {
+    resource_type: "video",
+  });
+  await cloudinary.uploader.destroy(video.thumbnail.public_id);
+  
   // delete vidoe form db
   const videoDelete = await Video.findByIdAndDelete(video?._id);
 
@@ -406,12 +412,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
   );
 
   // delte video and thumbnail file from cloudinary
-  await cloudinary.uploader.destroy(video.videoFile.public_id, {
-    resource_type: "video",
-  });
-  await cloudinary.uploader.destroy(video.thumbnail.public_id, {
-    resource_type: "video",
-  });
+  
 
   // delet related data like , comments
 
