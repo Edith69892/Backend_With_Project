@@ -19,27 +19,52 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     throw new ApiError(400, "video not found");
   }
 
-  const isLiked = await Like.findOne({ video: videoId, likedBy: req.user._id });
+//   const isLiked = await Like.findOne({ video: videoId, likedBy: req.user._id });
 
-  if (isLiked) {
+//   if (isLiked) {
+//         await Like.findByIdAndDelete(isLiked?._id);
+//         await Video.findByIdAndUpdate(videoId, {
+//         $inc: { likesCount: -1 },
+//         });
+
+//         message = "Unlike successfull";
+
+//   }
+//    else {
+//         await Like.create({ video: videoId, likedBy: req.user._id });
+//         await Video.findByIdAndUpdate(video._id, {
+//         $inc: { likesCount: 1 },
+//         });
+//         message = "like successfull";
+//   }
+
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, { likesCount: video.likesCount }, message));
+
+    const likedCheck = await Like.findOne({ video: videoId, likedBy: req.user._id });
+
+    if(likedCheck){
         await Like.findByIdAndDelete(isLiked?._id);
         await Video.findByIdAndUpdate(videoId, {
         $inc: { likesCount: -1 },
         });
 
-        message = "Unlike successfull";
-  }
-   else {
+        return res
+        .status(200)
+        .json( new ApiResponse(200, "Unliked Successfull", { isLiked : false, likesCount : video.likesCount}))
+
+    }
+
         await Like.create({ video: videoId, likedBy: req.user._id });
         await Video.findByIdAndUpdate(video._id, {
         $inc: { likesCount: 1 },
         });
-        message = "like successfull";
-  }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { likesCount: video.likesCount }, message));
+        return res
+        .status(200)
+        .json( new ApiResponse(200, "liked Successfull", { isLiked : true, likesCount : video.likesCount}))
+    
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
