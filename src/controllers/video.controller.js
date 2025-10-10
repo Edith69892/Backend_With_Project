@@ -308,46 +308,50 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const { title, description } = req.body;
   //TODO: update video details like title, description, thumbnail
 
-  if(!(isValidObjectId(videoId))){
-    throw new ApiError(400, "Invalid Video id.")
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid Video id.");
   }
 
-  const {title , description } = req.body;
+  const video = await Video.findById(videoId);
 
-  const video = await Video.findById(videoId)
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
 
-    if (!video) {
-      throw new ApiError(404, "Video not found");
-    }
+  if (video?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(
+      400,
+      "You have no access of update the video details because you are not owner."
+    );
+  }
 
-  const oldThumbnailId = video.thumbnail?.public_id
+  const oldThumbnailId = video.thumbnail?.public_id;
   const thumbnailPath = req.file?.path;
-  let newThumbnail = null
+  let newThumbnail = null;
 
-  if(thumbnailPath){
-     newThumbnail = await uploadOnCludinary(thumbnailPath)
-    
-   if (!newThumbnail?.url) {
+  if (thumbnailPath) {
+    newThumbnail = await uploadOnCludinary(thumbnailPath);
+
+    if (!newThumbnail?.url) {
       throw new ApiError(400, "Thumbnail url is missing");
     }
   }
 
+  video.title = title || video.title;
+  video.description = description || video.description;
+  if (newThumbnail) {
+    video.thumbnail = {
+      url: newThumbnail.url,
+      public_id: newThumbnail.public_id,
+    };
+  }
 
-    video.title = title || video.title;
-    video.description = description || video.description
-    if(newThumbnail){
-      video.thumbnail = {
-        url : newThumbnail.url,
-        public_id : newThumbnail.public_id
-      }
-    }
+  await video.save();
 
-
-    await video.save()
-
-  // delete old thumbnail 
+  // delete old thumbnail
 
   // Delete old thumbnail (if replaced)
   if (newThumbnail && oldThumbnailId) {
@@ -359,8 +363,8 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   return res
-  .status(200)
-  .json( new ApiResponse(200, video, " Video details update successfull."))
+    .status(200)
+    .json(new ApiResponse(200, video, " Video details update successfull."));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
