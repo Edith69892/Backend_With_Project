@@ -6,6 +6,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCludinary } from "../utils/cloudinary.js";
 import { getVideoDurationInSeconds } from "get-video-duration";
+import { Like } from "../models/like.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Playlist } from "../models/plyalist.model.js";
 
 //without condition
 // const getAllVideos = asyncHandler(async (req, res) => {
@@ -370,6 +373,55 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid Video id.");
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  if (video?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(
+      400,
+      "You have no access of update the video details because you are not owner."
+    );
+  }
+
+  // delete vidoe form db
+  const videoDelete = await Video.findByIdAndDelete(video?._id);
+
+  if (!videoDelete) {
+    throw new ApiError(400, "deleting video unsuccessfull");
+  }
+
+  //delte from playlist
+
+  await Playlist.updateMany(
+    { videos: videoId },
+    { $pull: { videos : videoId } }
+  );
+
+  // delte video and thumbnail file from cloudinary
+  await cloudinary.uploader.destroy(video.videoFile.public_id , { resource_type: "video" });
+  await cloudinary.uploader.destroy(video.thumbnail.public_id , { resource_type: "video" });
+
+  // delet related data like , comments
+
+  await Like.deleteMany({
+    video: videoId,
+  });
+
+  await Comment.deleteMany({
+    video: videoId,
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Video deleted successfully"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
