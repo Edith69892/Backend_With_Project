@@ -51,85 +51,128 @@ const getChannelStats = asyncHandler(async (req, res) => {
     channel: new mongoose.Types.ObjectId(userID),
   });
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, {
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
         totalVideos,
         totalViews: totalViewsCount,
         totalLikes,
         totalSubscribers,
-      } , "Channel stats fetched successfully.")
-    );
+      },
+      "Channel stats fetched successfully."
+    )
+  );
 
+  /////////////////////////////// Another method ///////////////////////////////
 
-/////////////////////////////// Another method ///////////////////////////////
+  // const totalSubscribers = await Subscription.aggregate([
+  //     {
+  //         $match: {
+  //             channel: new mongoose.Types.ObjectId(userId)
+  //         }
+  //     },
+  //     {
+  //         $group: {
+  //             _id: null,
+  //             subscribersCount: {
+  //                 $sum: 1
+  //             }
+  //         }
+  //     }
+  // ]);
 
-    // const totalSubscribers = await Subscription.aggregate([
-    //     {
-    //         $match: {
-    //             channel: new mongoose.Types.ObjectId(userId)
-    //         }
-    //     },
-    //     {
-    //         $group: {
-    //             _id: null,
-    //             subscribersCount: {
-    //                 $sum: 1
-    //             }
-    //         }
-    //     }
-    // ]);
+  // const video = await Video.aggregate([
+  //     {
+  //         $match: {
+  //             owner: new mongoose.Types.ObjectId(userId)
+  //         }
+  //     },
+  //     {
+  //         $lookup: {
+  //             from: "likes",
+  //             localField: "_id",
+  //             foreignField: "video",
+  //             as: "likes"
+  //         }
+  //     },
+  //     {
+  //         $project: {
+  //             totalLikes: {
+  //                 $size: "$likes"
+  //             },
+  //             totalViews: "$views",
+  //             totalVideos: 1
+  //         }
+  //     },
+  //     {
+  //         $group: {
+  //             _id: null,
+  //             totalLikes: {
+  //                 $sum: "$totalLikes"
+  //             },
+  //             totalViews: {
+  //                 $sum: "$totalViews"
+  //             },
+  //             totalVideos: {
+  //                 $sum: 1
+  //             }
+  //         }
+  //     }
+  // ]);
 
-    // const video = await Video.aggregate([
-    //     {
-    //         $match: {
-    //             owner: new mongoose.Types.ObjectId(userId)
-    //         }
-    //     },
-    //     {
-    //         $lookup: {
-    //             from: "likes",
-    //             localField: "_id",
-    //             foreignField: "video",
-    //             as: "likes"
-    //         }
-    //     },
-    //     {
-    //         $project: {
-    //             totalLikes: {
-    //                 $size: "$likes"
-    //             },
-    //             totalViews: "$views",
-    //             totalVideos: 1
-    //         }
-    //     },
-    //     {
-    //         $group: {
-    //             _id: null,
-    //             totalLikes: {
-    //                 $sum: "$totalLikes"
-    //             },
-    //             totalViews: {
-    //                 $sum: "$totalViews"
-    //             },
-    //             totalVideos: {
-    //                 $sum: 1
-    //             }
-    //         }
-    //     }
-    // ]);
-
-    // const channelStats = {
-    //     totalSubscribers: totalSubscribers[0]?.subscribersCount || 0,
-    //     totalLikes: video[0]?.totalLikes || 0,
-    //     totalViews: video[0]?.totalViews || 0,
-    //     totalVideos: video[0]?.totalVideos || 0
-    // };
+  // const channelStats = {
+  //     totalSubscribers: totalSubscribers[0]?.subscribersCount || 0,
+  //     totalLikes: video[0]?.totalLikes || 0,
+  //     totalViews: video[0]?.totalViews || 0,
+  //     totalVideos: video[0]?.totalVideos || 0
+  // };
 });
 
 const getChannelVideos = asyncHandler(async (req, res) => {
   // TODO: Get all the videos uploaded by the channel
+
+  const userId = req.user?._id;
+
+  const videos = await Video.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        totalLikes: {
+          $size: "$likes",
+        },
+        totalViews: "$views",
+      },
+    },
+    {
+      $project: {
+        videoFile: 1,
+        thumbnail: 1,
+        title: 1,
+        description: 1,
+        duration: 1,
+        totalLikes: 1,
+        totalViews: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, videos, "Channel videos fetched successfully."));
 });
 
 export { getChannelStats, getChannelVideos };
