@@ -35,7 +35,7 @@ const videoSchema = new Schema(
     },
 
     views: {
-      type: String,
+      type: Number,
       default: 0,
     },
     likesCount: {
