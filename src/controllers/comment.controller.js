@@ -119,8 +119,8 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
-  const {commentId} = req.params; 
-  const {content} = req.body
+  const { commentId } = req.params;
+  const { content } = req.body;
 
     if (!content) {
     throw new ApiError(400, "content required.");
