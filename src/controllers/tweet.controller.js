@@ -115,7 +115,7 @@ const updateTweet = asyncHandler(async (req, res) => {
 
   //only owner can edit thier tweet
 
-  if (tweet.owne.toString() !== req.user._id.toString()) {
+  if (tweet.owner.toString() !== req.user._id.toString()) {
     throw new ApiError(400, "only owner can edit thier tweet.");
   }
 
@@ -156,7 +156,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
 
   //only owner can edit thier tweet
 
-  if (tweet.owne.toString() !== req.user._id.toString()) {
+  if (tweet.owner.toString() !== req.user._id.toString()) {
     throw new ApiError(400, "only owner can edit thier tweet.");
   }
 
