@@ -13,7 +13,7 @@ const likeSchema = new Schema(
         
         tweet :{
             type : Schema.Types.ObjectId,
-            ref : "Comment"
+            ref : "Tweet"
         },
         likedBy :{
             type : Schema.Types.ObjectId,
