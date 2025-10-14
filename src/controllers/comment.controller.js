@@ -114,15 +114,74 @@ const addComment = asyncHandler(async (req, res) => {
     owner: req.user?._id,
   });
 
-  return res.status(200).json(200, comment, "comment add successfully");
+  return res.status(200).json( new ApiResponse(200, comment, "comment add successfully"));
 });
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
-});
+  const {commentId} = req.params; 
+  const {content} = req.body
+
+    if (!content) {
+    throw new ApiError(400, "content required.");
+  }
+
+  const comment = await Comment.findById(commentId);
+
+  if(!comment){
+    throw new ApiError(400, "comment not found.")
+  }
+
+  if(req.user?._id.toString() !== comment?.owner.toString()){
+    throw new ApiError(400, "You can't update this commnet.")
+  }
+  
+  const updatedCommnet = await Comment.findByIdAndUpdate(
+    comment?._id,{
+    $set:{
+      content : content
+    }
+  },
+    {
+      new : true
+    }
+  
+  );
+
+    if(!updatedCommnet){
+      throw new ApiError(400, "editing commnet unsuccessfully.")
+    }
+
+    return res
+    .status(200)
+    .json( new ApiResponse(200, updatedCommnet, "updated comment successfully."))
+})
+
 
 const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
+
+  const {commentId} = req.params; 
+
+  if(!isValidObjectId(commentId)){
+    throw new ApiError(400, "Invalid Comment Id.")
+  }
+
+  const comment = await Comment.findById(commentId);
+
+   if (!comment) {
+    throw new ApiError(404, "Comment not found.");
+  }
+
+  if(req.user?._id.toString() !== comment.owner.toString() ){
+    throw new ApiError(400, "You are not authorized to delete this comment.")
+  }
+  
+  await comment.deleteOne();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Comment deleted successfully."));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
