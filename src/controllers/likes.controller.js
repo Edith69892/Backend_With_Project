@@ -50,7 +50,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   });
 
   if (likedCheck) {
-    await Like.findByIdAndDelete(isLiked?._id);
+    await Like.findByIdAndDelete(likedCheck?._id);
     const updatedVideo = await Video.findByIdAndUpdate(
       videoId,
       { $inc: { likesCount: -1 } },
