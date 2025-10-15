@@ -9,7 +9,7 @@ import { uploadOnCludinary } from "../utils/cloudinary.js";
 import { getVideoDurationInSeconds } from "get-video-duration";
 import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
-import { Playlist } from "../models/plyalist.model.js";
+import { Playlist } from "../models/playlist.model.js";
 
 //without condition
 // const getAllVideos = asyncHandler(async (req, res) => {
