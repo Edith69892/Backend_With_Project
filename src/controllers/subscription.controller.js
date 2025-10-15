@@ -69,24 +69,59 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Channel Id.");
   }
 
-  const channel = await User.find({channel : channelId});
+  const channel = await User.findById(channelId);
 
   if (!channel) {
     throw new ApiError(404, "Channel not found.");
   }
 
-  const subscriptions = await Subscription.findById(channel._id).populate("subscriber", "userName fullName avatar")
+  const subscriptions = await Subscription.findById(channel._id).populate(
+    "subscriber",
+    "userName fullName avatar"
+  );
 
   const totalSubscribers = subscriptions.length;
 
   return res
-  .status(200)
-  .json( new ApiResponse(200 , {subscribers : subscriptions , totalSubscribers} , "Subscribers fetched successfully."))
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { subscribers: subscriptions, totalSubscribers },
+        "Subscribers fetched successfully."
+      )
+    );
 });
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
+
+  if (!isValidObjectId(subscriberId)) {
+    throw new ApiError(400, "Invalid SubscriberId.");
+  }
+
+  const subscriber = await User.findById(subscriberId);
+
+  if (!subscriber) {
+    throw new ApiError(404, "Subscriber not found.");
+  }
+
+  const subscribedChannels = await Subscription.find({
+    subscriber: subscriberId,
+  }).populate("channel", "userName fullName avatar");
+
+  const totalSubscribed = subscribedChannels.length;
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { channels: subscribedChannels, totalSubscribed },
+        "Subscribed channels fetched successfully."
+      )
+    );
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
