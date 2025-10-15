@@ -9,11 +9,11 @@ import {
     removeVideoFromPlaylist,
     updatePlaylist,
 } from "../controllers/playlist.controller.js"
-import {verifyJWT} from "../middlewares/auth.middleware.js"
+import {verifyUser} from "../middlewares/auth.middleware.js"
 
 const router = Router();
 
-router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
+router.use(verifyUser); // Apply verifyUser middleware to all routes in this file
 
 router.route("/").post(createPlaylist)
 
