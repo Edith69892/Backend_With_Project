@@ -75,19 +75,19 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Channel not found.");
   }
 
-  const subscriptions = await Subscription.findById(channel._id).populate(
+  const subscriptions = await Subscription.find({ channel: channelId }).populate(
     "subscriber",
     "userName fullName avatar"
   );
 
-  const totalSubscribers = subscriptions.length;
+//   const totalSubscribers = subscriptions.length;
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { subscribers: subscriptions, totalSubscribers },
+        { subscribers: subscriptions},
         "Subscribers fetched successfully."
       )
     );
