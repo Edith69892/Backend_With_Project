@@ -129,7 +129,10 @@
         url: avatar.url,
         public_id: avatar.public_id,
       },
-      coverImage: coverImage?.url || "",
+      coverImage: {
+        url: coverImage?.url || "",
+        public_id: coverImage?.public_id || "",
+      },
       email,
       userName,
       password,
