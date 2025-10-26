@@ -284,7 +284,7 @@
   const ChangeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user?.id);
+    const user = await User.findById(req.user?._id);
     if (!user) {
       throw new ApiError(400, "User not found.");
     }
@@ -296,7 +296,7 @@
     }
 
     user.password = newPassword;
-    await user.save({ validateBeforeSave: false });
+    await user.save();
 
     return res
       .status(200)
